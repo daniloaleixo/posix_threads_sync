@@ -1,0 +1,36 @@
+/* ********************************
+    EP2 - Programação Concorrente
+    Prof. Marcel Jackowski
+
+    Danilo Aleixo Gomes de Souza
+    n USP: 7972370
+  
+********************************** */
+
+
+
+/*
+	Como rodar o EP
+*/
+
+Para rodar o EP basta descompactar o arquivo e dar um make pelo terminal, o que irá gerar o arquivo ep1, depois é só rodá-lo usando ./ep1 e os argumentos.
+Inseri uma flag para modificar o valor de x que é calculado na integral por simulação para usar basta colocar:
+$./ep1 <args> -x <valor de x>
+Por exemplo 
+$./ep1 10 2 3 4 -x 0.5
+
+
+
+
+/* 
+	Modularização do EP
+*/
+
+O EP foi modularizado para tornar mais simples o entendimento portanto todos os processos estão separados em arquivos separados:
+P1 - Ordenação 					-> heapsort.c
+P2 - Numeros de Fibonacci 		-> fibonacci.c
+P3 - Agulha de Buffon 			-> agulha.c
+P4 - Integração por simulaçãp 	-> integral_sec_x.c
+
+
+

@@ -3,7 +3,7 @@ CFLAGS = -Wall -O0 -g
 LFLAGS = -lm -lpthread
 OUT = ep2 
 IN = ep2.c
-OBJS = ep2.o StringOps.o agulha.o
+OBJS = ep2.o StringOps.o 
 
 all: $(OUT) ep2
 
@@ -22,7 +22,4 @@ ep2.o: $(IN)
 
 StringOps.o: StringOps.c
 	$(CC) StringOps.c -c -o StringOps.o
-
-agulha.o: agulha.c
-	$(CC) agulha.c -c -o agulha.o
 

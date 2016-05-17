@@ -1,14 +1,12 @@
 /* ********************************
     EP2 - Programação Concorrente
     Prof. Marcel Jackowski
-
     Danilo Aleixo Gomes de Souza
     n USP: 7972370
   
 ********************************** */
 
 #include "StringOps.h"
-#include "agulha.h"
 #include <pthread.h>
 #include <time.h>
 #include <semaphore.h>
@@ -25,22 +23,19 @@ pthread_mutex_t mutex_alunosQueFestaram = PTHREAD_MUTEX_INITIALIZER, mutex_segur
 pthread_cond_t aindaTemAlunos, segurancaExpulsando;
 sem_t sem_segurancaRonda, sem_alunosNaSala;
 
-clock_t begin, end;
-double time1;
-
 
 void *aluno(void *numeroAluno)
 {
 	int tempoNaFesta = 0, nAlunosNaSala;
-	time1 = clock() - begin;
-	printf("%lf \tAluno %d esta na porta.\n", time1, (int) numeroAluno);
+
+	printf("Aluno %d esta na porta.\n", (int) numeroAluno);
 
 	
 	/* Verifica se o segurança ta em ronda */
 	pthread_mutex_lock(&m2);
 	while(!segurancaRonda)
 	{
-		/* DEPURACAO */printf(">>to aqui e o seguranca nao esta mais em ronda %d\n", segurancaRonda);
+		/* DEPURACAO printf("to aqui e o seguranca nao esta mais em ronda %d\n", segurancaRonda);*/
 		pthread_cond_wait(&segurancaExpulsando, &m2);
 	}
 	pthread_mutex_unlock(&m2);
@@ -48,10 +43,9 @@ void *aluno(void *numeroAluno)
 
 	/* coloca o aluno na festa */
 	sem_post(&sem_alunosNaSala);
-	/*DEPURACAO sem_getvalue(&sem_alunosNaSala, &i);
-	printf("sem: %d\n", i);*/
-	time1 = clock() - begin;
-	printf("%lf \tAluno %d esta na festa.\n", time1, (int) numeroAluno);
+	printf("Aluno %d esta na festa.\n", (int) numeroAluno);
+	/*DEPURACAO* sem_getvalue(&sem_alunosNaSala, &nAlunosNaSala);
+	printf("sem: %d\n", nAlunosNaSala);*/
 
 	/* tempo que passa na festa */
 	tempoNaFesta = rand() % r;
@@ -62,7 +56,9 @@ void *aluno(void *numeroAluno)
 	pthread_mutex_lock(&mutex_alunosQueFestaram);
 	alunosQueFestaram++;
 	sem_wait(&sem_alunosNaSala);
-	pthread_mutex_unlock(&mutex_alunosQueFestaram);
+
+	/*DEPURACAO*sem_getvalue(&sem_alunosNaSala, &nAlunosNaSala);
+	printf("sem2: %d\n", nAlunosNaSala);*/
 
 	/* verifica se tem mais alunos na sala */
 	sem_getvalue(&sem_alunosNaSala, &nAlunosNaSala);
@@ -71,9 +67,9 @@ void *aluno(void *numeroAluno)
 		/* DEPURACAO printf("nao tem mais alunos\n");*/
 		pthread_cond_broadcast(&aindaTemAlunos);
 	}
+	pthread_mutex_unlock(&mutex_alunosQueFestaram);
 
-	time1 = clock() - begin;
-	printf("%lf \tAluno %d vai embora.\n", time1, (int) numeroAluno);
+	printf("Aluno %d vai embora.\n", (int) numeroAluno);
 	/* DEPURACAO printf("Aluno %d vai embora, numero total: %d\n", (int) numeroAluno, alunosQueFestaram); */
 
 	return(NULL);
@@ -86,8 +82,7 @@ void *seguranca(void *arg)
 		/* seguranca vai fazer a ronda */
 		pthread_mutex_lock(&mutex_segurancaEmRonda);
 		segurancaRonda = TRUE;
-		time1 = clock() - begin;
-		printf("%lf \tSeguranca em ronda\n", time1);
+		printf("Seguranca em ronda\n");
 		pthread_mutex_unlock(&mutex_segurancaEmRonda);
 		
 		
@@ -98,27 +93,21 @@ void *seguranca(void *arg)
 		/* seguranca termina a ronda e vai para a porta */
 		pthread_mutex_lock(&mutex_segurancaEmRonda);
 		segurancaRonda = FALSE;
-		time1 = clock() - begin;
-		printf("%lf \tSeguranca na porta\n", time1);
+		printf("Seguranca na porta\n");
 		pthread_mutex_unlock(&mutex_segurancaEmRonda);
 		
 		
 
 		/* TODO
-
 		VErifica se tem os alunos na festa, se tiver expulsa eles */
 		pthread_mutex_lock(&m1);
 		sem_getvalue(&sem_alunosNaSala, &nAlunosNaSala);
 		if(nAlunosNaSala == 0)
-		{
-			time1 = clock() - begin;
-			printf("%lf \tSeguranca inspeciona a sala\n", time1);
-		}
+			printf("Seguranca inspeciona a sala\n");
 		else{
 			if(nAlunosNaSala >= p)
 			{
-				time1 = clock() - begin;
-				printf("%lf \tSeguranca expulsa os alunos\n", time1);
+				printf("Seguranca expulsa os alunos\n");
 				/* Expulsa todos os alunos */
 				while(nAlunosNaSala > 0)
 				{
@@ -132,14 +121,14 @@ void *seguranca(void *arg)
 
 
 	}
-	time1 = clock() - begin;
-	printf("%lf \tTermino da festa\n", time1);
+	printf("Termino da festa\n");
 	return(NULL);
 }
 
 
 int main(int argc, char *argv[])
 {
+
 	int i, j;
 	int intervaloChegadaAluno = 0;
 	pthread_t *thread_alunos, thread_seguranca;
@@ -178,7 +167,6 @@ int main(int argc, char *argv[])
 
 
 		/* cria thread para os alunos e thread seguranca */
-		begin = clock();
 		tid_seguranca = pthread_create(&thread_seguranca, NULL, seguranca, NULL);
 		for(i = 0; i < n; i++)
 		{
@@ -209,4 +197,3 @@ int main(int argc, char *argv[])
 
   	return 0;
 }
-

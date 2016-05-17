@@ -47,7 +47,6 @@ void *aluno(void *numeroAluno)
 void *seguranca(void *arg)
 {
 	int tempoRonda = 0;
-	printf("to aqui\n");
 	while(alunosQueFestaram != n)
 	{
 		printf("Seguranca em ronda\n");
@@ -97,15 +96,17 @@ int main(int argc, char *argv[])
 
 
 		/* cria thread para os alunos e thread seguranca */
+		tid_seguranca = pthread_create(&thread_seguranca, NULL, seguranca, NULL);
 		for(i = 0; i < n; i++)
 		{
 			intervaloChegadaAluno = rand() % t; /* gera o intervalo maximo entre alunos aleatorio de 1 a t */
 			tid_alunos = pthread_create(&thread_alunos[i], NULL, aluno, (void *) numeroAluno[i]);
 			usleep(intervaloChegadaAluno * 1000); /* espera até o proximo aluno chegar na festa */
 		}
-		tid_seguranca = pthread_create(&thread_seguranca, NULL, seguranca, NULL);
 
 
+		for(i = 0; i < n; i++)
+			pthread_join(thread_alunos[i], NULL);	
 		pthread_join(thread_seguranca, NULL);
 
 

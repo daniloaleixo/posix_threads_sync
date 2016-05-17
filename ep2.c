@@ -11,6 +11,7 @@
 #include "agulha.h"
 #include <pthread.h>
 #include <time.h>
+#include <semaphore.h>
 
 #define TRUE 1
 #define FALSE 0

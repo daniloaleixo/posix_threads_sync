@@ -29,7 +29,11 @@ void *aluno(void *numeroAluno)
 
 	printf("Aluno %d esta na porta.\n", (int) numeroAluno);
 
-	/*Verifica se o segurança ta dando um role */
+	/* TODO
+
+	Verifica se o segurança ta dando um role */
+
+
 	printf("Aluno %d esta na festa.\n", (int) numeroAluno);
 
 	tempoNaFesta = rand() % r;
@@ -54,7 +58,11 @@ void *seguranca(void *arg)
 		tempoRonda = rand() % s;
 		usleep(tempoRonda * 1000); /* tempo da ronda */
 
-		printf("Seguranca na porta\n");		
+		printf("Seguranca na porta\n");
+
+		/* TODO
+
+		VErifica se tem os alunos na festa, se tiver expulsa eles */
 	}
 	printf("A festa acabou\n");
 	return(NULL);

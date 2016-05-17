@@ -32,12 +32,12 @@ void *aluno(void *numeroAluno)
 
 	printf("Aluno %d esta na porta.\n", (int) numeroAluno);
 
-	/* TODO
-
-	Verifica se o segurança ta em ronda */
+	
+	/* Verifica se o segurança ta em ronda */
 	pthread_mutex_lock(&m2);
 	while(!segurancaRonda)
 	{
+		/* DEPURACAO printf("to aqui e o seguranca nao esta mais em ronda %d\n", segurancaRonda);*/
 		pthread_cond_wait(&segurancaExpulsando, &m2);
 	}
 	pthread_mutex_unlock(&m2);
@@ -63,6 +63,7 @@ void *aluno(void *numeroAluno)
 	sem_getvalue(&sem_alunosNaSala, &nAlunosNaSala);
 	if(nAlunosNaSala == 0)	
 	{
+		/* DEPURACAO printf("nao tem mais alunos\n");*/
 		pthread_cond_broadcast(&aindaTemAlunos);
 	}
 	pthread_mutex_unlock(&mutex_alunosQueFestaram);
@@ -106,10 +107,12 @@ void *seguranca(void *arg)
 		else{
 			if(nAlunosNaSala >= p)
 			{
+				printf("Seguranca expulsa os alunos\n");
 				/* Expulsa todos os alunos */
 				while(nAlunosNaSala > 0)
 				{
 					pthread_cond_wait(&aindaTemAlunos, &m1);
+					sem_getvalue(&sem_alunosNaSala, &nAlunosNaSala);
 				}				
 				pthread_cond_broadcast(&segurancaExpulsando);
 			}
@@ -176,10 +179,6 @@ int main(int argc, char *argv[])
 		for(i = 0; i < n; i++)
 			pthread_join(thread_alunos[i], NULL);	
 		pthread_join(thread_seguranca, NULL);
-
-
-
-		printf("Acabou o programa\n");
 
 	}
 	else {

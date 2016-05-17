@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -O0 -g
-LFLAGS = -lm
-OUT = ep2
+LFLAGS = -lm -lpthread
+OUT = ep2 
 IN = ep2.c
 OBJS = ep2.o StringOps.o agulha.o
 

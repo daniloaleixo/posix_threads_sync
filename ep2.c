@@ -10,83 +10,119 @@
 #include "StringOps.h"
 #include "agulha.h"
 #include <pthread.h>
+#include <time.h>
 
 #define TRUE 1
 #define FALSE 0
+
+/* VARIAVEIS GLOBAIS */
+int n, p, t, r, s;
+int alunosQueFestaram = 0;
+
+/* */
+pthread_mutex_t mutex_alunosQueFestaram = PTHREAD_MUTEX_INITIALIZER;
+
+
+void *aluno(void *numeroAluno)
+{
+	int tempoNaFesta = 0;
+
+	printf("Aluno %d esta na porta.\n", (int) numeroAluno);
+
+	/*Verifica se o segurança ta dando um role */
+	printf("Aluno %d esta na festa.\n", (int) numeroAluno);
+
+	tempoNaFesta = rand() % r;
+	usleep(tempoNaFesta * 1000); /* tempo que passa na festa */
+
+
+	/* aluno saiu da festa */
+	pthread_mutex_lock(&mutex_alunosQueFestaram);
+	alunosQueFestaram++;
+	pthread_mutex_unlock(&mutex_alunosQueFestaram);
+	printf("Aluno %d vai embora, numero total: %d\n", (int) numeroAluno, alunosQueFestaram);
+
+	return(NULL);
+}
+void *seguranca(void *arg)
+{
+	int tempoRonda = 0;
+	printf("to aqui\n");
+	while(alunosQueFestaram != n)
+	{
+		printf("Seguranca em ronda\n");
+
+		tempoRonda = rand() % s;
+		usleep(tempoRonda * 1000); /* tempo da ronda */
+
+		printf("Seguranca na porta\n");		
+	}
+	printf("A festa acabou\n");
+	return(NULL);
+}
 
 
 int main(int argc, char *argv[])
 {
 
-	int *v, i;
-	int m, n, r, s;
-	double x = 0.5;
-	pid_t pids[4];
+	int i, j;
+	int intervaloChegadaAluno = 0;
+	pthread_t *thread_alunos, thread_seguranca;
+	int *tid_alunos, tid_seguranca, *numeroAluno;
 
-	if(argc >= 4)
+	/* inicializa mutexes */
+	pthread_mutex_init(&mutex_alunosQueFestaram, NULL);
+
+	/* alimenta o rand com uma seed*/
+	srand( (unsigned)time(NULL) );
+
+
+	if(argc >= 5)
 	{
 		/* Atualiza os inteiros com as entradas */
-		m = atoi(argv[1]);
-		n = atoi(argv[2]);
-		r = atoi(argv[3]);
-		s = atoi(argv[4]);
+		n = atoi(argv[1]);
+		p = atoi(argv[2]);
+		t = atoi(argv[3]);
+		r = atoi(argv[4]);
+		s = atoi(argv[5]);
 
-		/* flags especiais */		
-		if(argv[5] != NULL) 
-			if(argv[5][1] == 'x') /* --x <valor de x> */
-				x = atof(argv[6]);
+		/* aloca o vetor de threads e de ids de alunos */
+		thread_alunos = mallocSafe(n * sizeof(pthread_t));
+		tid_alunos = mallocSafe(n * sizeof(int));
+
+		/* numeroAluno sera passado para thread com o numero de cada aluno */
+		numeroAluno = mallocSafe(n * sizeof(int));
+		for(i = 0; i < n; i++)
+			numeroAluno[i] = i+1;
+
+
+		/* cria thread para os alunos e thread seguranca */
+		for(i = 0; i < n; i++)
+		{
+			intervaloChegadaAluno = rand() % t; /* gera o intervalo maximo entre alunos aleatorio de 1 a t */
+			tid_alunos = pthread_create(&thread_alunos[i], NULL, aluno, (void *) numeroAluno[i]);
+			usleep(intervaloChegadaAluno * 1000); /* espera até o proximo aluno chegar na festa */
+		}
+		tid_seguranca = pthread_create(&thread_seguranca, NULL, seguranca, NULL);
+
+
+		pthread_join(thread_seguranca, NULL);
 
 
 
-	    printf("P0: Pai começou a rodar\n");
-	    if (!(pids[0] = fork())) {
-	    	// P1
-	        printf("\tP1 sendo criado\n");
-	       	/*v = criaVetor(m);
-			printf("\t\tP1: Vetor:          "); imprimeVetor(v, m);
-			heapsort(v, m);
-			printf("\t\tP1: Vetor ordenado: "); imprimeVetor(v, m);*/
-	        exit(0);
-	    } 
-	    else if (!(pids[1] = fork())) {
-	        // P2
-	        printf("\tP2 sendo criado\n");
-	        /*Fibonacci(n, 0); */
-	        exit(0); 
-
-	    } 
-	    else if (!(pids[2] = fork())) {
-	        // P3
-	        printf("\tP3 sendo criado\n");
-	        agulhaBuffon(r);
-	        exit(0);
-	    
-	    } 
-	    else if (!(pids[3] = fork())) {
-	        // P4
-	        printf("\tP4 sendo criado\n");
-	        /*integralSecX(x, s);*/
-	        exit(0);
-	    } 
-	    else {
-	        // Volta para o Pai
-	        printf("P0: Esperando os filhos retornarem\n");
-
-	        for(i = 0; i < 4; i++)
-	        {
-	        	wait(pids[i]);
-	            printf("\tO processo P%d foi encerrado\n",i+1);
-	        }
-	    }
-	    printf("P0: Pai sera encerrado\n");
+		printf("Acabou o programa\n");
 
 	}
 	else {
 		printf("\n\nModo de uso\n\n");
-        printf("ep1 <argumento heapsort> <argumento Fibonacci> <argumento> <argumento integral de sec x> <flags>\n\n");
-        printf("Flags:\n");
-        printf("-x <valor de x>\n");
-        printf("para modificar o valor de x, no calculo da integral de sec x\n\n");
+        printf("./ep2 <convidados> <minimo-alunos> <intervalo> <tempo-maximo> <tempo-ronda>\n");
+        printf("Onde:\n");
+        printf("<convidados>: 			numero total de convidados da festa\n");
+        printf("<minimo-alunos>: 		numero minimo de alunos na festa para o seguranca esvaziar a sala\n");
+        printf("<intervalo>: 			intervalo maximo de tempo dentre chegadas de convidados em ms\n");
+        printf("<tempo-maximo>: 		tempo maximo de participacao na festa para cada aluno em ms\n");
+        printf("<tempo-ronda>: 			tempo maximo de ronda do seguranca em ms\n");
+        printf("\n");
 	}
 	
 

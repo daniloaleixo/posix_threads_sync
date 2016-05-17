@@ -56,18 +56,19 @@ void *aluno(void *numeroAluno)
 	pthread_mutex_lock(&mutex_alunosQueFestaram);
 	alunosQueFestaram++;
 	sem_wait(&sem_alunosNaSala);
+	sem_getvalue(&sem_alunosNaSala, &nAlunosNaSala);
+	pthread_mutex_unlock(&mutex_alunosQueFestaram);
 
 	/*DEPURACAO*sem_getvalue(&sem_alunosNaSala, &nAlunosNaSala);
 	printf("sem2: %d\n", nAlunosNaSala);*/
 
 	/* verifica se tem mais alunos na sala */
-	sem_getvalue(&sem_alunosNaSala, &nAlunosNaSala);
 	if(nAlunosNaSala == 0)	
 	{
 		/* DEPURACAO printf("nao tem mais alunos\n");*/
 		pthread_cond_broadcast(&aindaTemAlunos);
 	}
-	pthread_mutex_unlock(&mutex_alunosQueFestaram);
+	
 
 	printf("Aluno %d vai embora.\n", (int) numeroAluno);
 	/* DEPURACAO printf("Aluno %d vai embora, numero total: %d\n", (int) numeroAluno, alunosQueFestaram); */

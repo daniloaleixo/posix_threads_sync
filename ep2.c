@@ -20,9 +20,9 @@ int n, p, t, r, s;
 int alunosQueFestaram = 0, segurancaRonda = FALSE;
 /* */
 pthread_mutex_t mutex_alunosQueFestaram = PTHREAD_MUTEX_INITIALIZER, mutex_segurancaEmRonda = PTHREAD_MUTEX_INITIALIZER, 
-m1, entraFesta, mutex_segurancaPorta;
-pthread_cond_t aindaTemAlunos, segurancaExpulsando, segurancaNaRonda, segurancaNaPorta;
-sem_t sem_segurancaRonda, sem_alunosNaSala;
+				mutex_segurancaPorta = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t aindaTemAlunos, segurancaNaRonda;
+sem_t sem_alunosNaSala;
 
 
 void *aluno(void *numeroAluno)
@@ -36,7 +36,7 @@ void *aluno(void *numeroAluno)
 	pthread_mutex_lock(&mutex_segurancaEmRonda);
 	while(!segurancaRonda)
 	{
-		/* DEPURACAO*/ printf("to aqui e o seguranca nao esta mais em ronda %d\n", segurancaRonda);
+		/* DEPURACAO*printf("to aqui e o seguranca nao esta mais em ronda %d\n", segurancaRonda);*/
 		if(!segurancaRonda) pthread_cond_wait(&segurancaNaRonda, &mutex_segurancaEmRonda);
 	}
 	pthread_mutex_unlock(&mutex_segurancaEmRonda);
@@ -128,7 +128,7 @@ void *seguranca(void *arg)
 int main(int argc, char *argv[])
 {
 
-	int i, j;
+	int i;
 	int intervaloChegadaAluno = 0;
 	pthread_t *thread_alunos, thread_seguranca;
 	int *tid_alunos, tid_seguranca, *numeroAluno;
@@ -138,11 +138,8 @@ int main(int argc, char *argv[])
 	pthread_mutex_init(&mutex_segurancaEmRonda, NULL);
 	pthread_mutex_init(&mutex_segurancaPorta, NULL);
 	sem_init(&sem_alunosNaSala, SHARED, 0);
-	sem_init(&sem_segurancaRonda, SHARED, 0);
 	pthread_cond_init(&aindaTemAlunos, NULL);
-	pthread_cond_init(&segurancaExpulsando, NULL);
 	pthread_cond_init(&segurancaNaRonda, NULL);
-	pthread_cond_init(&segurancaNaPorta, NULL);
 
 	/* alimenta o rand com uma seed*/
 	srand( (unsigned)time(NULL) );

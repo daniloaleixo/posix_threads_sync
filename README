@@ -13,24 +13,15 @@
 	Como rodar o EP
 */
 
-Para rodar o EP basta descompactar o arquivo e dar um make pelo terminal, o que irá gerar o arquivo ep1, depois é só rodá-lo usando ./ep1 e os argumentos.
-Inseri uma flag para modificar o valor de x que é calculado na integral por simulação para usar basta colocar:
-$./ep1 <args> -x <valor de x>
-Por exemplo 
-$./ep1 10 2 3 4 -x 0.5
+Para rodar o EP basta descompactar o arquivo e dar um make pelo terminal, o que irá gerar o arquivo ep2, depois é só rodá-lo usando ./ep2 e os argumentos.
 
+Modo de uso
 
-
-
-/* 
-	Modularização do EP
-*/
-
-O EP foi modularizado para tornar mais simples o entendimento portanto todos os processos estão separados em arquivos separados:
-P1 - Ordenação 					-> heapsort.c
-P2 - Numeros de Fibonacci 		-> fibonacci.c
-P3 - Agulha de Buffon 			-> agulha.c
-P4 - Integração por simulaçãp 	-> integral_sec_x.c
-
-
+./ep2 <convidados> <minimo-alunos> <intervalo> <tempo-maximo> <tempo-ronda>
+Onde:
+<convidados>: 			numero total de convidados da festa
+<minimo-alunos>: 		numero minimo de alunos na festa para o seguranca esvaziar a sala
+<intervalo>: 			intervalo maximo de tempo dentre chegadas de convidados em ms
+<tempo-maximo>: 		tempo maximo de participacao na festa para cada aluno em ms
+<tempo-ronda>: 			tempo maximo de ronda do seguranca em ms
 

@@ -18,7 +18,8 @@
 /* VARIAVEIS GLOBAIS */
 int n, p, t, r, s;
 int alunosQueFestaram = 0, segurancaRonda = FALSE;
-/* */
+
+/* VARIAVEIS PTHREAD */
 pthread_mutex_t mutex_alunosQueFestaram = PTHREAD_MUTEX_INITIALIZER, mutex_segurancaEmRonda = PTHREAD_MUTEX_INITIALIZER, 
 				mutex_segurancaPorta = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t aindaTemAlunos, segurancaNaRonda;
@@ -36,7 +37,6 @@ void *aluno(void *numeroAluno)
 	pthread_mutex_lock(&mutex_segurancaEmRonda);
 	while(!segurancaRonda)
 	{
-		/* DEPURACAO*printf("to aqui e o seguranca nao esta mais em ronda %d\n", segurancaRonda);*/
 		if(!segurancaRonda) pthread_cond_wait(&segurancaNaRonda, &mutex_segurancaEmRonda);
 	}
 	pthread_mutex_unlock(&mutex_segurancaEmRonda);
@@ -45,8 +45,7 @@ void *aluno(void *numeroAluno)
 	/* coloca o aluno na festa */
 	sem_post(&sem_alunosNaSala);
 	printf("Aluno %d esta na festa.\n", (int) numeroAluno);
-	/*DEPURACAO* sem_getvalue(&sem_alunosNaSala, &nAlunosNaSala);
-	printf("sem: %d\n", nAlunosNaSala);*/
+
 
 	/* tempo que passa na festa */
 	tempoNaFesta = rand() % r;
@@ -61,25 +60,25 @@ void *aluno(void *numeroAluno)
 	sem_getvalue(&sem_alunosNaSala, &nAlunosNaSala);
 	pthread_mutex_unlock(&mutex_alunosQueFestaram);
 
-	/*DEPURACAO*sem_getvalue(&sem_alunosNaSala, &nAlunosNaSala);
-	printf("sem2: %d\n", nAlunosNaSala);*/
 
 	/* verifica se tem mais alunos na sala */
 	if(nAlunosNaSala == 0)	
 	{
-		/* DEPURACAO printf("nao tem mais alunos\n");*/
 		pthread_cond_broadcast(&aindaTemAlunos);
 	}
 	pthread_mutex_unlock(&mutex_segurancaPorta);
 
+
 	printf("Aluno %d vai embora.\n", (int) numeroAluno);
-	/* DEPURACAO printf("Aluno %d vai embora, numero total: %d\n", (int) numeroAluno, alunosQueFestaram); */
 
 	return(NULL);
 }
+
+
 void *seguranca(void *arg)
 {
 	int tempoRonda = 0, nAlunosNaSala = 0;
+
 	while(alunosQueFestaram != n)
 	{
 		/* seguranca vai fazer a ronda */
@@ -101,7 +100,7 @@ void *seguranca(void *arg)
 		printf("Seguranca na porta\n");
 		pthread_mutex_unlock(&mutex_segurancaEmRonda);
 		
-		/* VErifica se tem os alunos na festa, se tiver expulsa eles */
+		/* Verifica se tem os alunos na festa, se tiver expulsa eles */
 		sem_getvalue(&sem_alunosNaSala, &nAlunosNaSala);
 		if(nAlunosNaSala == 0)
 			printf("Seguranca inspeciona a sala\n");
@@ -118,8 +117,6 @@ void *seguranca(void *arg)
 			}
 		}
 		pthread_mutex_unlock(&mutex_segurancaPorta);
-
-
 	}
 	return(NULL);
 }

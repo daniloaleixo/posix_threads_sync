@@ -19,8 +19,9 @@
 int n, p, t, r, s;
 int alunosQueFestaram = 0, segurancaRonda = FALSE;
 /* */
-pthread_mutex_t mutex_alunosQueFestaram = PTHREAD_MUTEX_INITIALIZER, mutex_segurancaEmRonda = PTHREAD_MUTEX_INITIALIZER, m1, m2;
-pthread_cond_t aindaTemAlunos, segurancaExpulsando;
+pthread_mutex_t mutex_alunosQueFestaram = PTHREAD_MUTEX_INITIALIZER, mutex_segurancaEmRonda = PTHREAD_MUTEX_INITIALIZER, 
+m1, entraFesta, mutex_segurancaPorta;
+pthread_cond_t aindaTemAlunos, segurancaExpulsando, segurancaNaRonda, segurancaNaPorta;
 sem_t sem_segurancaRonda, sem_alunosNaSala;
 
 
@@ -32,13 +33,13 @@ void *aluno(void *numeroAluno)
 
 	
 	/* Verifica se o segurança ta em ronda */
-	pthread_mutex_lock(&m2);
+	pthread_mutex_lock(&mutex_segurancaEmRonda);
 	while(!segurancaRonda)
 	{
-		/* DEPURACAO printf("to aqui e o seguranca nao esta mais em ronda %d\n", segurancaRonda);*/
-		pthread_cond_wait(&segurancaExpulsando, &m2);
+		/* DEPURACAO*/ printf("to aqui e o seguranca nao esta mais em ronda %d\n", segurancaRonda);
+		if(!segurancaRonda) pthread_cond_wait(&segurancaNaRonda, &mutex_segurancaEmRonda);
 	}
-	pthread_mutex_unlock(&m2);
+	pthread_mutex_unlock(&mutex_segurancaEmRonda);
 
 
 	/* coloca o aluno na festa */
@@ -53,6 +54,7 @@ void *aluno(void *numeroAluno)
 
 
 	/* aluno saiu da festa */
+	pthread_mutex_lock(&mutex_segurancaPorta);
 	pthread_mutex_lock(&mutex_alunosQueFestaram);
 	alunosQueFestaram++;
 	sem_wait(&sem_alunosNaSala);
@@ -68,7 +70,7 @@ void *aluno(void *numeroAluno)
 		/* DEPURACAO printf("nao tem mais alunos\n");*/
 		pthread_cond_broadcast(&aindaTemAlunos);
 	}
-	
+	pthread_mutex_unlock(&mutex_segurancaPorta);
 
 	printf("Aluno %d vai embora.\n", (int) numeroAluno);
 	/* DEPURACAO printf("Aluno %d vai embora, numero total: %d\n", (int) numeroAluno, alunosQueFestaram); */
@@ -84,6 +86,7 @@ void *seguranca(void *arg)
 		pthread_mutex_lock(&mutex_segurancaEmRonda);
 		segurancaRonda = TRUE;
 		printf("Seguranca em ronda\n");
+		pthread_cond_broadcast(&segurancaNaRonda);
 		pthread_mutex_unlock(&mutex_segurancaEmRonda);
 		
 		
@@ -92,16 +95,13 @@ void *seguranca(void *arg)
 
 
 		/* seguranca termina a ronda e vai para a porta */
+		pthread_mutex_lock(&mutex_segurancaPorta);
 		pthread_mutex_lock(&mutex_segurancaEmRonda);
 		segurancaRonda = FALSE;
 		printf("Seguranca na porta\n");
 		pthread_mutex_unlock(&mutex_segurancaEmRonda);
 		
-		
-
-		/* TODO
-		VErifica se tem os alunos na festa, se tiver expulsa eles */
-		pthread_mutex_lock(&m1);
+		/* VErifica se tem os alunos na festa, se tiver expulsa eles */
 		sem_getvalue(&sem_alunosNaSala, &nAlunosNaSala);
 		if(nAlunosNaSala == 0)
 			printf("Seguranca inspeciona a sala\n");
@@ -112,17 +112,15 @@ void *seguranca(void *arg)
 				/* Expulsa todos os alunos */
 				while(nAlunosNaSala > 0)
 				{
-					pthread_cond_wait(&aindaTemAlunos, &m1);
+					pthread_cond_wait(&aindaTemAlunos, &mutex_segurancaPorta);
 					sem_getvalue(&sem_alunosNaSala, &nAlunosNaSala);
 				}				
-				pthread_cond_broadcast(&segurancaExpulsando);
 			}
 		}
-		pthread_mutex_unlock(&m1);
+		pthread_mutex_unlock(&mutex_segurancaPorta);
 
 
 	}
-	printf("Termino da festa\n");
 	return(NULL);
 }
 
@@ -138,11 +136,13 @@ int main(int argc, char *argv[])
 	/* inicializa mutexes, conds e semaforos */
 	pthread_mutex_init(&mutex_alunosQueFestaram, NULL);
 	pthread_mutex_init(&mutex_segurancaEmRonda, NULL);
-	pthread_mutex_init(&m1, NULL); pthread_mutex_init(&m2, NULL);
+	pthread_mutex_init(&mutex_segurancaPorta, NULL);
 	sem_init(&sem_alunosNaSala, SHARED, 0);
 	sem_init(&sem_segurancaRonda, SHARED, 0);
 	pthread_cond_init(&aindaTemAlunos, NULL);
 	pthread_cond_init(&segurancaExpulsando, NULL);
+	pthread_cond_init(&segurancaNaRonda, NULL);
+	pthread_cond_init(&segurancaNaPorta, NULL);
 
 	/* alimenta o rand com uma seed*/
 	srand( (unsigned)time(NULL) );
@@ -194,7 +194,9 @@ int main(int argc, char *argv[])
         printf("\n");
 	}
 	
-
+	printf("Termino da festa\n");	
 
   	return 0;
 }
+
+
